@@ -1,5 +1,6 @@
 import { Note } from '../Note'
 import { BPM, ChartElement, TimeSignature } from '../types'
+const request = require('request');
 
 function holdClear(notes: Note[], holds: Note[]) {
     const newHolds = holds.map(hold => {
@@ -52,7 +53,24 @@ function BeatsToSeconds(chart: ChartElement[]) {
 }
 
 export function susToEntities(inputFile: string, offset: number = 0) {
-    const parsedInput = inputFile.split('\n').map(line => line.trim())
+    let parsedInput:string[] = []
+    if(inputFile.match("This score was created by M4ple Editor")){
+        let options = {
+            uri: "https://support-m4ple-on-sonolus.vercel.app/",
+            headers: {
+                "Content-type": "application/json",
+            },
+            json: {
+              "chart": inputFile
+            }
+        };
+        request.post(options, function(error:any, response:any, body:string){
+            parsedInput = body.split('\n').map(line => line.trim())
+        })
+    }
+    else{
+        parsedInput = inputFile.split('\n').map(line => line.trim())
+    }
 
     //Find and process time signatures
     const timeSignatureSection = parsedInput.filter(line => !line.startsWith('#BPM') && line.slice(4, 6) === '02')
